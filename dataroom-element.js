@@ -1,4 +1,4 @@
-export class DataroomElement extends HTMLElement {
+export default class DataroomElement extends HTMLElement {
   /**
    * This function runs when the element is 
    * connected to the dom. It calls all the 
@@ -47,11 +47,6 @@ export class DataroomElement extends HTMLElement {
    */
   async fetch(endpoint, body = {}){
     const bearer_token = localStorage.getItem('dataroom-token');
-    // let notebook = localStorage.getItem('dataroom-notebook');
-    // if(notebook === null){
-    //   notebook = 'default'
-    // }
-    // body = Object.assign({notebook}, body);
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${bearer_token}`
@@ -78,7 +73,7 @@ export class DataroomElement extends HTMLElement {
    */
   stepThroughChildNodes(node) {
     if (node.nodeType === Node.ELEMENT_NODE) {
-      this.dtrmEvent('NODE-ADDED', {node: node});
+      this.event('NODE-ADDED', {node: node});
     }
     for (let i = 0; i < node.childNodes.length; i++) {
       this.stepThroughChildNodes(node.childNodes[i]);
@@ -107,7 +102,7 @@ export class DataroomElement extends HTMLElement {
    * @param  {Object} detail the content of the event we want to emit
    * @return {undefined}        does not return
    */
-  dtrmEvent(name, detail = {}){
+  event(name, detail = {}){
     const dtrmEvent = new CustomEvent(name, {
       detail
     });
@@ -123,13 +118,13 @@ export class DataroomElement extends HTMLElement {
     switch(mutation.type){
     case 'childList':
       if(mutation.addedNodes.length > 0){
-        this.dtrmEvent('NODE-ADDED', {node: mutation.target});
+        this.event('NODE-ADDED', {node: mutation.target});
       } else {
-        this.dtrmEvent('NODE-REMOVED', {node:mutation.target});
+        this.event('NODE-REMOVED', {node:mutation.target});
       }
       break;
     case 'attributes':
-      this.dtrmEvent('NODE-CHANGED', {
+      this.event('NODE-CHANGED', {
         node:mutation.target, 
         attribute: mutation.attributeName,
         value: mutation.target.getAttribute(mutation.attributeName)

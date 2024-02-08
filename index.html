@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dataroom Element</title>
+  <script type="module">
+    import DataroomElement from './dataroom-element.js';
+
+    class MyCustomElement extends DataroomElement {
+      async initialize() {
+        this.innerHTML = '<h1>Dataroom Element</h1>' + this.innerHTML;
+      }
+
+      async disconnect() {
+        // Custom cleanup code here
+      }
+    }
+
+    customElements.define('element-tag-name', MyCustomElement)
+
+  </script>
+</head>
+<body>
+
+  <element-tag-name id="test_element">
+    <div>Test Div</div>
+  </element-tag-name>
+  <script>
+    test_element.addEventListener('NODE-ADDED', (e) => {
+      console.log("Node added:", e.detail)
+    });
+
+    test_element.addEventListener('NODE-REMOVED', (e) => {
+      console.log("Node Removed:", e.detail)
+    });
+
+    test_element.addEventListener('NODE-CHANGED', (e) => {
+      console.log("Node Changed:", e.detail)
+    });
+  </script>
+</body>
+</html>
