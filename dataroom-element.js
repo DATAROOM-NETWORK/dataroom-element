@@ -24,7 +24,6 @@ export default class DataroomElement extends HTMLElement {
 
   disconnectedCallback() {
     this.childNodeObserver.disconnect();
-    this.attributeObserver.disconnect();
     this.disconnect();
   }
 
@@ -115,6 +114,7 @@ export default class DataroomElement extends HTMLElement {
    */
   htmlObjectChanged(mutation) {
     // Run your function when child elements are added, removed, or attributes are changed
+    console.log(mutation.addedNodes.length);
     switch(mutation.type){
     case 'childList':
       if(mutation.addedNodes.length > 0){

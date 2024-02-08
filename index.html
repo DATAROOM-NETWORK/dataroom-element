@@ -13,6 +13,7 @@
       }
 
       async disconnect() {
+        console.log('removing element-tag-name');
         // Custom cleanup code here
       }
     }
@@ -38,6 +39,23 @@
     test_element.addEventListener('NODE-CHANGED', (e) => {
       console.log("Node Changed:", e.detail)
     });
+  </script>
+
+  <script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const new_element = document.createElement('div');
+      test_element.appendChild(new_element);
+
+      test_element.setAttribute('test', 'test attribute set');
+      new_element.remove();
+
+      test_element.remove();
+
+    });
+
+
+
   </script>
 </body>
 </html>
