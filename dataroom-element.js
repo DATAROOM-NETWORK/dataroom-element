@@ -9,6 +9,7 @@ export default class DataroomElement extends HTMLElement {
 
     // Continue with the rest of the initialization
     this.observeChildChanges();
+    this.observeAttributeChanges();
     this.stepThroughChildNodes(this);
     this.initialize();
   }
@@ -95,6 +96,23 @@ export default class DataroomElement extends HTMLElement {
     this.childNodeObserver.observe(this, config);
   }
 
+  observeAttributeChanges() {
+    this.attributeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes') {
+          this.event('NODE-CHANGED', {
+            attribute: mutation.attributeName,
+            oldValue: mutation.oldValue,
+            newValue: this.getAttribute(mutation.attributeName)
+          });
+        }
+      });
+    });
+    const config = { attributes: true, attributeOldValue: true };
+    this.attributeObserver.observe(this, config);
+  }
+
+
   /**
    * Helper function to make emitting events easier
    * @param  {string} name   the name of the event we want to emit
@@ -113,23 +131,27 @@ export default class DataroomElement extends HTMLElement {
    * @return {undefined}          does not return
    */
   htmlObjectChanged(mutation) {
-    // Run your function when child elements are added, removed, or attributes are changed
-    console.log(mutation.addedNodes.length);
-    switch(mutation.type){
-    case 'childList':
-      if(mutation.addedNodes.length > 0){
-        this.event('NODE-ADDED', {node: mutation.target});
-      } else {
-        this.event('NODE-REMOVED', {node:mutation.target});
+    // Handle added nodes
+    mutation.addedNodes.forEach((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        this.event('NODE-ADDED', {node: node});
       }
-      break;
-    case 'attributes':
+    });
+
+    // Handle removed nodes
+    mutation.removedNodes.forEach((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        this.event('NODE-REMOVED', {node: node});
+      }
+    });
+
+    // Handle attribute changes
+    if (mutation.type === 'attributes') {
       this.event('NODE-CHANGED', {
-        node:mutation.target, 
+        node: mutation.target,
         attribute: mutation.attributeName,
         value: mutation.target.getAttribute(mutation.attributeName)
       });
-      break;
     }
   }
 
