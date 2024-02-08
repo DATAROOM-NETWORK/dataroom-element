@@ -25,6 +25,8 @@ class MyCustomElement extends DataroomElement {
     // Custom cleanup code here
   }
 }
+
+customElements.define('element-tag-name', MyCustomelement)
 ```
 
 ### Lifecycle Callbacks
