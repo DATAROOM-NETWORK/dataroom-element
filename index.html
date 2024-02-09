@@ -43,11 +43,13 @@
 
   <script>
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       const new_element = document.createElement('div');
       test_element.appendChild(new_element);
+      const test_obj = await test_element.get('test.json');
+      console.log(test_obj);
 
-      test_element.setAttribute('test', 'test attribute set');
+      test_element.setAttribute('test', test_obj.test);
       new_element.remove();
 
       test_element.remove();

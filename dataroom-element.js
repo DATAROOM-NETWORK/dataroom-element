@@ -45,7 +45,7 @@ export default class DataroomElement extends HTMLElement {
    * @param  {object} body     the content of the server call
    * @return {object}          the response from the server as an object
    */
-  async fetch(endpoint, body = {}){
+  async post(endpoint, body = {}){
     const bearer_token = localStorage.getItem('dataroom-token');
     const headers = {
       'Content-Type': 'application/json',
@@ -64,6 +64,12 @@ export default class DataroomElement extends HTMLElement {
       const error = response
       throw new Error(error.statusText);
     }
+  }
+
+  async get(endpoint){
+    const response = await fetch(endpoint);
+    const response_value = await response.json();
+    return response_value;
   }
 
   /**
