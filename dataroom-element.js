@@ -153,7 +153,7 @@ export default class DataroomElement extends HTMLElement {
 
     // Handle attribute changes
     if (mutation.type === 'attributes') {
-      this.event('NODE-CHANGED', {
+      this.event('CHILD-NODE-CHANGED', {
         node: mutation.target,
         attribute: mutation.attributeName,
         value: mutation.target.getAttribute(mutation.attributeName)
