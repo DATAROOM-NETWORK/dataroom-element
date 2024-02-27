@@ -13,6 +13,15 @@ export default class DataroomElement extends HTMLElement {
     this.stepThroughChildNodes(this);
     this.initialize();
   }
+
+  /**
+   * Creates a new document element
+   * @param  {[type]} type string
+   * @return {HTML Element}      an HTML element of type type
+   */
+  create(type){
+    return document.createElement(type);
+  }
   /**
    * Initialize runs when the component is connected. 
    * This function should be overridden in the child class
