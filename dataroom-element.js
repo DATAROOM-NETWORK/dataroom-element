@@ -15,12 +15,14 @@ export default class DataroomElement extends HTMLElement {
   }
 
   /**
-   * Creates a new document element
+   * Creates a new document element and appends it to the div
    * @param  {[type]} type string
    * @return {HTML Element}      an HTML element of type type
    */
   create(type){
-    return document.createElement(type);
+    const el = document.createElement(type);
+    this.appendChild(el);
+    return el
   }
   /**
    * Initialize runs when the component is connected. 
