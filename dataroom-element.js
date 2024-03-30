@@ -19,8 +19,11 @@ export default class DataroomElement extends HTMLElement {
    * @param  {[type]} type string
    * @return {HTML Element}      an HTML element of type type
    */
-  create(type){
+  create(type, attributes){
     const el = document.createElement(type);
+    Object.keys(attributes).forEach(attribute => {
+      el.setAttribute(attribute, attributes[attribute]);
+    });
     this.appendChild(el);
     return el
   }

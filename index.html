@@ -10,6 +10,8 @@
     class MyCustomElement extends DataroomElement {
       async initialize() {
         this.innerHTML = '<h1>Dataroom Element</h1>' + this.innerHTML;
+        this.input = this.create('input', {type: 'color', name: 'color-picker', id:'color'});
+        this.appendChild(this.input);
       }
 
       async disconnect() {
@@ -46,8 +48,11 @@
       const test_obj = await test_element.get('test.json');
       console.log(test_obj);
       test_element.setAttribute('test', test_obj.test);
-      new_element.remove();
-      test_element.remove();
+
+      setTimeout(()=>{
+        new_element.remove();
+        test_element.remove();
+      },5000)
     });
   </script>
 </body>
