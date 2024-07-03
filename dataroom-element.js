@@ -1,55 +1,47 @@
 export default class DataroomElement extends HTMLElement {
   /**
-   * This function runs when the element is 
-   * connected to the dom. It calls all the 
-   * dom elements and runs initilization code
+   * Creates a new HTML element of the specified type and appends it to the current element or a specified target element.
+   * @param {string} type - The type of element to create.
+   * @param {Object} attributes - An object of key-value pairs representing attribute names and values.
+   * @param {HTMLElement|null} [target_el=null] - The target element to append the new element to. Defaults to the current element.
+   * @return {HTMLElement} - The newly created element.
    */
-
-  connectedCallback() {
-
-    // Continue with the rest of the initialization
-    this.observeChildChanges();
-    this.observeAttributeChanges();
-    this.stepThroughChildNodes(this);
-    this.initialize();
-  }
-
-  /**
-   * Creates a new document element and appends it to the div
-   * @param  {[type]} type string
-   * @return {HTML Element}      an HTML element of type type
-   */
-  create(type, attributes){
+  create(type, attributes = {}, target_el = null) {
+    this.log(`Creating a new Element of ${type}`);
     const el = document.createElement(type);
-    Object.keys(attributes).forEach(attribute => {
-      el.setAttribute(attribute, attributes[attribute]);
+    Object.keys(attributes).forEach((attribute) => {
+      if (attribute === "content") {
+        el.innerHTML = attributes[attribute];
+      } else {
+        el.setAttribute(attribute, attributes[attribute]);
+      }
     });
-    this.appendChild(el);
-    return el
+    if (target_el === null) {
+      this.appendChild(el);
+    } else {
+      target_el.appendChild(el);
+    }
+    return el;
   }
-  /**
-   * Initialize runs when the component is connected. 
-   * This function should be overridden in the child class
-   * @return {null} returns nothing
-   */
-  async initialize() {
-    console.log('Override this class when creating a new dataroom element');
-    // override this class to run initialization code here
-  }
-
-  disconnectedCallback() {
-    this.childNodeObserver.disconnect();
-    this.disconnect();
-  }
-
 
   /**
-   * If the user wishes to do something when the component is 
-   * disconnected, they will override this function
-   * @return {null} Does not return
+   * Emits a custom event from the element.
+   * @param {string} name - The name of the event to emit.
+   * @param {Object} [detail={}] - Additional data to include with the event.
+   * @returns {void}
    */
-  async disconnect() {
-    // override this function to run disconnect code
+  event(name, detail = {}) {
+    const dtrmEvent = new CustomEvent(name, {
+      detail,
+    });
+    this.dispatchEvent(dtrmEvent);
+  }
+
+  on(name, cb){
+    console.log('creating event listener...', name);
+    return this.addEventListener(name, (e)=>{
+      cb(e.detail)
+    });
   }
 
   /**
@@ -59,7 +51,7 @@ export default class DataroomElement extends HTMLElement {
    * @param  {object} body     the content of the server call
    * @return {object}          the response from the server as an object
    */
-  async post(endpoint, body = {}){
+  async call(endpoint, body = {}){
     const bearer_token = localStorage.getItem('dataroom-token');
     const headers = {
       'Content-Type': 'application/json',
@@ -80,50 +72,72 @@ export default class DataroomElement extends HTMLElement {
     }
   }
 
-  async get(endpoint){
-    const response = await fetch(endpoint);
-    const response_value = await response.json();
-    return response_value;
-  }
-
   /**
-   * Steps through all child nodes and announces their connection to DATAROOM
-   * @param  {HTML Element} node the HTML Element we are analyzing
-   * @return {HTML Element}      the HTML Element we have found
+   * Logs a message if the verbose flag is set.
+   * @param {string} message - The message to log.
    */
-  stepThroughChildNodes(node) {
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      this.event('NODE-ADDED', {node: node});
-    }
-    for (let i = 0; i < node.childNodes.length; i++) {
-      this.stepThroughChildNodes(node.childNodes[i]);
+  log(message) {
+    if (this.verbose) {
+      console.log(this.id, "says:", message);
+    } else {
+      this.event("status-update", message);
+      return;
     }
   }
 
   /**
-   * Observes all child elements of an element for changes
-   * @return {undefined} does not return
+   * Called when the element is added to the DOM.
+   * Sets the element's ID and attributes, and initializes the element.
+   * @private
    */
-  observeChildChanges() {
-    this.childNodeObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' || mutation.type === 'childList') {
-          this.htmlObjectChanged(mutation);
-        }
-      });
-    });
-    const config = { attributes: true, childList: true, subtree: true };
-    this.childNodeObserver.observe(this, config);
+  connectedCallback() {
+    this.preInit();
   }
 
+  /**
+   * Runs before the Initializeation 
+  */
+  async preInit(){
+    this.content = this.innerText; 
+    this.attrs = this.getAttributeNames().reduce((acc, name) => {
+      return { ...acc, [name]: this.getAttribute(name) };
+    }, {});
+    this.classList.add('dataroom-element');
+    this.observeAttributeChanges();
+    this.initialize();
+  }
+
+
+  /**
+   * Sets multiple attributes on the element.
+   * @param {Object} data - An object of key-value pairs representing attribute names and values.
+   * @return {Promise<void>} - A promise that resolves when all attributes are set.
+   */
+  async setAttrs(data) {
+    this.log("setting attrs:", data);
+    for (const [key, value] of Object.entries(data)) {
+      await this.setAttribute(key, value);
+    }
+    this.render();
+  }
+
+
+  /**
+   * Observes changes to element attributes and emits events when they change.
+   * @private
+   */
   observeAttributeChanges() {
+    this.log("observing attribute changes");
     this.attributeObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes') {
-          this.event('NODE-CHANGED', {
+        if (mutation.type === "attributes") {
+          this.attrs[mutation.attributeName] = this.getAttribute(
+            mutation.attributeName,
+          );
+          this.event("NODE-CHANGED", {
             attribute: mutation.attributeName,
             oldValue: mutation.oldValue,
-            newValue: this.getAttribute(mutation.attributeName)
+            newValue: this.getAttribute(mutation.attributeName),
           });
         }
       });
@@ -132,47 +146,32 @@ export default class DataroomElement extends HTMLElement {
     this.attributeObserver.observe(this, config);
   }
 
+  /**
+   * Initializes the element. This function should be overridden in the child class.
+   * @returns {void}
+   */
+  async initialize() {
+    // override this class to run initialization code here
+  }
 
   /**
-   * Helper function to make emitting events easier
-   * @param  {string} name   the name of the event we want to emit
-   * @param  {Object} detail the content of the event we want to emit
-   * @return {undefined}        does not return
+   * Called when the element is removed from the DOM.
+   * Disconnects the element.
+   * @private
    */
-  event(name, detail = {}){
-    const dtrmEvent = new CustomEvent(name, {
-      detail
-    });
-    this.dispatchEvent(dtrmEvent);
+  disconnectedCallback() {
+    this.log("disconnecting...");
+    this.disconnect();
   }
+
   /**
-   * What to do when a child object changes
-   * @param  {object} mutation the mutation object from the HTML Element
-   * @return {undefined}          does not return
+   * Handles disconnection logic. This function should be overridden in the child class.
+   * @returns {void}
    */
-  htmlObjectChanged(mutation) {
-    // Handle added nodes
-    mutation.addedNodes.forEach((node) => {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        this.event('NODE-ADDED', {node: node});
-      }
-    });
-
-    // Handle removed nodes
-    mutation.removedNodes.forEach((node) => {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        this.event('NODE-REMOVED', {node: node});
-      }
-    });
-
-    // Handle attribute changes
-    if (mutation.type === 'attributes') {
-      this.event('CHILD-NODE-CHANGED', {
-        node: mutation.target,
-        attribute: mutation.attributeName,
-        value: mutation.target.getAttribute(mutation.attributeName)
-      });
-    }
+  async disconnect() {
+    // override this function to run disconnect code
   }
+
+
 
 }
